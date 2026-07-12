@@ -20,7 +20,7 @@ export default function Builder({ apiKey }: { apiKey: string }) {
 
   const generate = async () => {
     if (!prompt.trim() || loading) return;
-    if (!apiKey) { setError("Add your Groq API key in Settings first."); return; }
+    if (!apiKey) { setError("Add your personal Groq API key in Vertex Settings."); return; }
     setLoading(true); setError("");
     try {
       const response = await fetch("/api/build", { method: "POST", headers: { "Content-Type": "application/json", "X-Groq-Api-Key": apiKey }, body: JSON.stringify({ prompt, currentHtml: html || undefined, action: html ? "refine" : "generate" }) });

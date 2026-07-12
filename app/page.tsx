@@ -84,7 +84,7 @@ export default function Home() {
   };
 
   const startVoice = () => {
-    const SpeechRecognition = (window as typeof window & { webkitSpeechRecognition?: new () => { lang:string; start:()=>void; onresult:(e:{results:{0:{0:{transcript:string}}}[]})=>void } }).webkitSpeechRecognition;
+    const SpeechRecognition = (window as typeof window & { webkitSpeechRecognition?: new () => { lang:string; start:()=>void; onresult:(e:{ results: { 0: { 0: { transcript: string } } } })=>void } }).webkitSpeechRecognition;
     if (!SpeechRecognition) return;
     const recognition = new SpeechRecognition();
     recognition.lang = "en-IN";
@@ -116,7 +116,7 @@ export default function Home() {
         <div className="system-card">
           <div className="system-title"><span className={connected ? "live-dot" : "live-dot offline"} /> SYSTEM STATUS</div>
           <strong>{connected ? "GROQ READY" : "DEMO MODE"}</strong>
-          <small>{connected ? "Free Groq key saved" : "Open Settings to add key"}</small>
+          <small>{connected ? "Personal Groq key saved" : "Open Settings to add key"}</small>
         </div>
         <div className="profile"><div>R</div><span><b>Rounak</b><small>Creator access</small></span><button onClick={() => setView("settings")}>⚙</button></div>
       </aside>
@@ -135,7 +135,7 @@ export default function Home() {
               <h1>Connect your <em>Groq API</em></h1>
               <p className="settings-intro">Your key is saved only in this browser on this device. It is never added to the website code or GitHub.</p>
               <div className="key-panel">
-                <div className="key-panel-head"><span>⚡</span><div><strong>GROQ CLOUD</strong><small>Free AI engine</small></div><b className={apiKey ? "connected-badge" : "connected-badge off"}>{apiKey ? "READY" : "NOT CONNECTED"}</b></div>
+                <div className="key-panel-head"><span>⚡</span><div><strong>GROQ CLOUD</strong><small>Free AI engine</small></div><b className={connected ? "connected-badge" : "connected-badge off"}>{connected ? "READY" : "NOT CONNECTED"}</b></div>
                 <label htmlFor="groq-key">GROQ API KEY</label>
                 <div className="key-input">
                   <input id="groq-key" type={keyVisible ? "text" : "password"} value={keyDraft} onChange={(event) => setKeyDraft(event.target.value)} placeholder="gsk_••••••••••••••••••••" autoComplete="off" spellCheck={false} />
