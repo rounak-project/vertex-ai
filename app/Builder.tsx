@@ -4,18 +4,24 @@ import { useEffect, useState } from "react";
 
 export default function Builder({ apiKey }: { apiKey: string }) {
   const [prompt, setPrompt] = useState("");
-  const [html, setHtml] = useState(() => typeof window === "undefined" ? "" : localStorage.getItem("vertex-builder-html") ?? "");
+  const [html, setHtml] = useState("");
   const [tab, setTab] = useState<"preview" | "code">("preview");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [previewError, setPreviewError] = useState("");
 
   useEffect(() => {
+    const loadTimer = window.setTimeout(() => {
+      setHtml(localStorage.getItem("vertex-builder-html") ?? "");
+    }, 0);
     const listener = (event: MessageEvent) => {
       if (event.data?.source === "vertex-preview" && event.data?.error) setPreviewError(String(event.data.error).slice(0, 180));
     };
     window.addEventListener("message", listener);
-    return () => window.removeEventListener("message", listener);
+    return () => {
+      window.clearTimeout(loadTimer);
+      window.removeEventListener("message", listener);
+    };
   }, []);
 
   const generate = async () => {

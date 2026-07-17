@@ -2,6 +2,7 @@
 
 import { FormEvent, useEffect, useRef, useState } from "react";
 import Builder from "./Builder";
+import Search from "./Search";
 
 type Message = { role: "user" | "assistant"; content: string };
 type Mode = "general" | "study" | "build" | "creative";
@@ -32,31 +33,52 @@ function formatText(text: string) {
 }
 
 export default function Home() {
-  const [messages, setMessages] = useState<Message[]>(() => {
-    if (typeof window === "undefined") return [];
-    const saved = localStorage.getItem("vertex-chat");
-    if (!saved) return [];
-    try { return JSON.parse(saved) as Message[]; } catch { return []; }
-  });
+  const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState("");
   const [mode, setMode] = useState<Mode>("general");
-  const [view, setView] = useState<"chat" | "builder" | "settings">("chat");
-  const [apiKey, setApiKey] = useState(() => typeof window === "undefined" ? "" : localStorage.getItem("vertex-groq-key") ?? "");
-  const [keyDraft, setKeyDraft] = useState(() => typeof window === "undefined" ? "" : localStorage.getItem("vertex-groq-key") ?? "");
+  const [view, setView] = useState<"chat" | "search" | "builder" | "settings">("chat");
+  const [apiKey, setApiKey] = useState("");
+  const [keyDraft, setKeyDraft] = useState("");
   const [keyVisible, setKeyVisible] = useState(false);
   const [savedNotice, setSavedNotice] = useState(false);
-  const [responseLength, setResponseLength] = useState(() => typeof window === "undefined" ? "short" : localStorage.getItem("vertex-length") ?? "short");
-  const [customInstructions, setCustomInstructions] = useState(() => typeof window === "undefined" ? "" : localStorage.getItem("vertex-instructions") ?? "");
+  const [responseLength, setResponseLength] = useState("short");
+  const [customInstructions, setCustomInstructions] = useState("");
+  const [storageReady, setStorageReady] = useState(false);
   const [loading, setLoading] = useState(false);
   const [sidebar, setSidebar] = useState(false);
   const connected = Boolean(apiKey);
   const endRef = useRef<HTMLDivElement>(null);
   const requestRef = useRef<AbortController | null>(null);
+  const savedNoticeTimerRef = useRef<number | null>(null);
 
   useEffect(() => {
-    localStorage.setItem("vertex-chat", JSON.stringify(messages));
     endRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages, loading]);
+
+  useEffect(() => {
+    const loadTimer = window.setTimeout(() => {
+      const saved = localStorage.getItem("vertex-chat");
+      if (saved) {
+        try { setMessages(JSON.parse(saved) as Message[]); } catch { setMessages([]); }
+      }
+      const savedKey = localStorage.getItem("vertex-groq-key") ?? "";
+      setApiKey(savedKey);
+      setKeyDraft(savedKey);
+      setResponseLength(localStorage.getItem("vertex-length") ?? "short");
+      setCustomInstructions(localStorage.getItem("vertex-instructions") ?? "");
+      setStorageReady(true);
+    }, 0);
+
+    return () => {
+      window.clearTimeout(loadTimer);
+      requestRef.current?.abort();
+      if (savedNoticeTimerRef.current) window.clearTimeout(savedNoticeTimerRef.current);
+    };
+  }, []);
+
+  useEffect(() => {
+    if (storageReady) localStorage.setItem("vertex-chat", JSON.stringify(messages));
+  }, [messages, storageReady]);
 
   const send = async (event?: FormEvent, suggested?: string) => {
     event?.preventDefault();
@@ -98,7 +120,8 @@ export default function Home() {
     else localStorage.removeItem("vertex-groq-key");
     setApiKey(clean);
     setSavedNotice(true);
-    window.setTimeout(() => setSavedNotice(false), 2200);
+    if (savedNoticeTimerRef.current) window.clearTimeout(savedNoticeTimerRef.current);
+    savedNoticeTimerRef.current = window.setTimeout(() => setSavedNotice(false), 2200);
   };
 
   return (
@@ -110,6 +133,7 @@ export default function Home() {
         <p className="nav-label">INTELLIGENCE MODES</p>
         <nav>
           {modes.map((item) => <button key={item.id} className={view === "chat" && mode === item.id ? "active" : ""} onClick={() => { setMode(item.id); setView("chat"); setSidebar(false); }}><i>{item.icon}</i>{item.label}<span>›</span></button>)}
+          <button className={view === "search" ? "active" : ""} onClick={() => { setView("search"); setSidebar(false); }}><i>⌕</i>Search<span>›</span></button>
           <button className={view === "builder" ? "active" : ""} onClick={() => { setView("builder"); setSidebar(false); }}><i>▣</i>Website Builder<span>›</span></button>
           <button className={view === "settings" ? "active" : ""} onClick={() => { setView("settings"); setSidebar(false); }}><i>⚙</i>Settings<span>›</span></button>
         </nav>
@@ -124,12 +148,12 @@ export default function Home() {
       <section className="workspace">
         <header>
           <button className="menu" onClick={() => setSidebar((value) => !value)}>☰</button>
-          <div><span className="pulse" /> VERTEX CORE <small>/ {view === "settings" ? "SETTINGS" : view === "builder" ? "BUILDER" : mode.toUpperCase()}</small></div>
+          <div><span className="pulse" /> VERTEX CORE <small>/ {view === "settings" ? "SETTINGS" : view === "builder" ? "BUILDER" : view === "search" ? "SEARCH" : mode.toUpperCase()}</small></div>
           <div className="header-actions"><span>{connected ? "ENCRYPTED · LIVE" : "LOCAL DEMO"}</span><button onClick={() => setMessages([])}>CLEAR</button></div>
         </header>
 
         <div className="chat-area">
-          {view === "builder" ? <Builder apiKey={apiKey} /> : view === "settings" ? (
+          {view === "builder" ? <Builder apiKey={apiKey} /> : view === "search" ? <Search /> : view === "settings" ? (
             <section className="settings-view">
               <p className="overline">VERTEX CONFIGURATION</p>
               <h1>Connect your <em>Groq API</em></h1>

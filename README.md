@@ -23,4 +23,6 @@ Every visitor enters their own free Groq API key in Vertex Settings. The key is 
 
 ## Deploying to Vercel
 
-Create a Vercel project from this repository and deploy with the default Next.js framework settings. No shared Groq environment variable is required.
+Create a Vercel project from this repository and deploy with the default Next.js framework settings.
+
+Set `TAVILY_API_KEY` in Vercel project environment variables for Vertex Search. No shared Groq environment variable is required because visitors provide their own Groq API key in Settings.

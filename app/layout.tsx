@@ -3,7 +3,7 @@ import "./globals.css";
 
 export const metadata: Metadata = {
   title: "Vertex AI — Personal Intelligence",
-  description: "Rounak's futuristic AI assistant powered by Grok.",
+  description: "Rounak's futuristic AI assistant powered by Groq.",
   other: {
     "codex-preview": "development",
   },
